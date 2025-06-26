@@ -16,20 +16,27 @@ const router = express.Router();
 // Validation rules
 const createReportValidation = [
   body('description')
-    .trim()
+    .notEmpty()
+    .withMessage('Deskripsi tidak boleh kosong')
     .isLength({ min: 10, max: 1000 })
-    .withMessage('Description must be between 10 and 1000 characters'),
+    .withMessage('Deskripsi harus antara 10 hingga 1000 karakter'),
+  
   body('latitude')
+    .notEmpty()
+    .withMessage('Latitude tidak boleh kosong')
     .isFloat({ min: -90, max: 90 })
-    .withMessage('Latitude must be a valid number between -90 and 90'),
+    .withMessage('Latitude harus berupa angka valid antara -90 hingga 90'),
+  
   body('longitude')
+    .notEmpty()
+    .withMessage('Longitude tidak boleh kosong')
     .isFloat({ min: -180, max: 180 })
-    .withMessage('Longitude must be a valid number between -180 and 180'),
+    .withMessage('Longitude harus berupa angka valid antara -180 hingga 180'),
+  
   body('address')
     .optional()
-    .trim()
-    .isLength({ max: 200 })
-    .withMessage('Address cannot exceed 200 characters')
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Alamat harus antara 1 hingga 500 karakter'),
 ];
 
 const verifyReportValidation = [

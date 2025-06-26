@@ -3,12 +3,104 @@ const Report = require('../models/Report');
 const path = require('path');
 const fs = require('fs');
 
-// Create new report
+/**
+ * @swagger
+ * /api/reports:
+ *   post:
+ *     summary: Create a new report
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - description
+ *               - latitude
+ *               - longitude
+ *               - photo
+ *             properties:
+ *               description:
+ *                 type: string
+ *                 minLength: 10
+ *                 maxLength: 1000
+ *                 description: Description of the road damage
+ *               latitude:
+ *                 type: number
+ *                 minimum: -90
+ *                 maximum: 90
+ *                 description: Latitude coordinate
+ *               longitude:
+ *                 type: number
+ *                 minimum: -180
+ *                 maximum: 180
+ *                 description: Longitude coordinate
+ *               address:
+ *                 type: string
+ *                 description: Human-readable address (optional)
+ *               photo:
+ *                 type: string
+ *                 format: binary
+ *                 description: Photo of the road damage
+ *     responses:
+ *       201:
+ *         description: Report created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Report created successfully
+ *                 data:
+ *                   $ref: '#/components/schemas/Report'
+ *       400:
+ *         description: Validation error or missing data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       413:
+ *         description: File too large
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * Create a new road damage report
+ * @async
+ * @function createReport
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing report data
+ * @param {string} req.body.description - Description of the road damage (10-1000 characters)
+ * @param {string} req.body.latitude - Latitude coordinate (-90 to 90)
+ * @param {string} req.body.longitude - Longitude coordinate (-180 to 180)
+ * @param {string} [req.body.address] - Human-readable address
+ * @param {Object} req.file - Uploaded photo file
+ * @param {Object} req.user - Authenticated user object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} JSON response with created report or error
+ */
 const createReport = async (req, res) => {
   try {
+    // Log incoming data for debugging
+    console.log('=== CREATE REPORT REQUEST ===');
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file ? { name: req.file.originalname, size: req.file.size } : 'No file');
+    
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
@@ -79,7 +171,100 @@ const createReport = async (req, res) => {
   }
 };
 
-// Get all reports (admin only)
+/**
+ * @swagger
+ * /api/reports:
+ *   get:
+ *     summary: Get all reports with pagination and filtering
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, verified, rejected]
+ *         description: Filter by report status
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of reports per page
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           default: createdAt
+ *         description: Field to sort by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order
+ *     responses:
+ *       200:
+ *         description: Reports retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     reports:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Report'
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         current:
+ *                           type: integer
+ *                         pages:
+ *                           type: integer
+ *                         total:
+ *                           type: integer
+ *                         limit:
+ *                           type: integer
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * Get all reports with pagination and filtering (Admin only)
+ * @async
+ * @function getAllReports
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {string} [req.query.status] - Filter by report status
+ * @param {number} [req.query.page=1] - Page number for pagination
+ * @param {number} [req.query.limit=10] - Number of reports per page
+ * @param {string} [req.query.sortBy='createdAt'] - Field to sort by
+ * @param {string} [req.query.sortOrder='desc'] - Sort order (asc/desc)
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} JSON response with reports and pagination info
+ */
 const getAllReports = async (req, res) => {
   try {
     const { status, page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;

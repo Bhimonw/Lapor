@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Camera, MapPin, Upload, Loader2, AlertCircle } from 'lucide-react';
@@ -16,7 +16,9 @@ const CreateReport = () => {
   const {
     getCurrentPosition,
     position,
+    setPosition,
     address,
+    setAddress,
     loading: locationLoading,
     error: locationError,
     isSupported
@@ -78,36 +80,97 @@ const CreateReport = () => {
   };
 
   const onSubmit = async (data) => {
-    if (!selectedFile) {
-      toast.error('Foto laporan wajib diupload');
-      return;
-    }
+    console.log('=== FORM SUBMISSION DEBUG ===');
+    console.log('1. Raw form data from react-hook-form:', data);
+    console.log('2. Selected file:', selectedFile);
+    console.log('3. Position state:', position);
+    console.log('4. Address state:', address);
+    console.log('5. Data description:', data.description);
+    console.log('6. Data description type:', typeof data.description);
+    console.log('7. Data description length:', data.description?.length);
     
-    if (!position) {
-      toast.error('Lokasi wajib didapatkan');
+    if (!selectedFile) {
+      toast.error('Please select a photo');
       return;
     }
+
+    if (!position || !position.latitude || !position.longitude) {
+      toast.error('Please enable location access');
+      return;
+    }
+
+    if (!data.description || data.description.trim().length < 10) {
+      toast.error('Description must be at least 10 characters');
+      return;
+    }
+
+    console.log('8. Validation passed, preparing submission data...');
+    console.log('9. Final submission data:', {
+      description: data.description,
+      selectedFile: selectedFile?.name,
+      position,
+      address
+    });
 
     setIsSubmitting(true);
     
     try {
+      console.log('10. Creating FormData...');
+      
       const formData = new FormData();
+      
+      console.log('11. Appending description:', data.description, 'Type:', typeof data.description);
       formData.append('description', data.description);
-      formData.append('photo', selectedFile);
+      
+      console.log('12. Appending latitude:', position.latitude, 'Type:', typeof position.latitude);
       formData.append('latitude', position.latitude);
+      
+      console.log('13. Appending longitude:', position.longitude, 'Type:', typeof position.longitude);
       formData.append('longitude', position.longitude);
       
+      console.log('14. Appending photo:', selectedFile, 'Name:', selectedFile?.name);
+      formData.append('photo', selectedFile);
+      
       if (address) {
+        console.log('15. Appending address:', address, 'Type:', typeof address);
         formData.append('address', address);
       }
 
-      await reportService.createReport(formData);
+      // Log FormData entries
+      console.log('16. FormData entries:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`   ${key}:`, value, 'Type:', typeof value);
+      }
+
+      // Prepare data object for reportService
+      const reportData = {
+        description: data.description,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        photo: selectedFile,
+        address: address || ''
+      };
+      
+      console.log('17. Sending to reportService:', reportData);
+      await reportService.createReport(reportData);
       
       toast.success('Laporan berhasil dibuat!');
-      navigate('/reports/my');
+      navigate('/reports');
     } catch (error) {
       console.error('Error creating report:', error);
-      toast.error('Gagal membuat laporan');
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
+      console.error('Error response headers:', error.response?.headers);
+      
+      // Show specific error message if available
+      if (error.response?.data?.errors) {
+        const errorMessages = error.response.data.errors.map(err => err.msg).join(', ');
+        toast.error(`Gagal membuat laporan: ${errorMessages}`);
+      } else if (error.response?.data?.message) {
+        toast.error(`Gagal membuat laporan: ${error.response.data.message}`);
+      } else {
+        toast.error('Gagal membuat laporan. Silakan coba lagi.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -253,7 +316,111 @@ const CreateReport = () => {
                     </div>
                   )}
                   
-                  {position && (
+                  {/* Manual Coordinate Input */}
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-600">Atau masukkan koordinat secara manual:</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Contoh: Latitude: -3.453639, Longitude: 114.837887
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Latitude <span className="text-gray-500">(-90 hingga 90)</span>
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          placeholder="-3.453639"
+                          value={position?.latitude || ''}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '') {
+                              setPosition(prev => prev ? { ...prev, latitude: null } : null);
+                            } else {
+                              const lat = parseFloat(value);
+                              if (!isNaN(lat) && lat >= -90 && lat <= 90) {
+                                setPosition(prev => ({
+                                  ...prev,
+                                  latitude: lat
+                                }));
+                              }
+                            }
+                          }}
+                          min="-90"
+                          max="90"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
+                            position?.latitude !== null && position?.latitude !== undefined && 
+                            (position.latitude < -90 || position.latitude > 90) 
+                              ? 'border-red-300 bg-red-50' 
+                              : 'border-gray-300'
+                          }`}
+                        />
+                        {position?.latitude !== null && position?.latitude !== undefined && 
+                         (position.latitude < -90 || position.latitude > 90) && (
+                          <p className="text-xs text-red-600 mt-1">
+                            Latitude harus antara -90 dan 90
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Longitude <span className="text-gray-500">(-180 hingga 180)</span>
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          placeholder="114.837887"
+                          value={position?.longitude || ''}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '') {
+                              setPosition(prev => prev ? { ...prev, longitude: null } : null);
+                            } else {
+                              const lng = parseFloat(value);
+                              if (!isNaN(lng) && lng >= -180 && lng <= 180) {
+                                setPosition(prev => ({
+                                  ...prev,
+                                  longitude: lng
+                                }));
+                              }
+                            }
+                          }}
+                          min="-180"
+                          max="180"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
+                            position?.longitude !== null && position?.longitude !== undefined && 
+                            (position.longitude < -180 || position.longitude > 180) 
+                              ? 'border-red-300 bg-red-50' 
+                              : 'border-gray-300'
+                          }`}
+                        />
+                        {position?.longitude !== null && position?.longitude !== undefined && 
+                         (position.longitude < -180 || position.longitude > 180) && (
+                          <p className="text-xs text-red-600 mt-1">
+                            Longitude harus antara -180 dan 180
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Address Input */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Alamat (Opsional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={address || "Lokasi belum ditemukan"}
+                        value={address || ''}
+                        onChange={(e) => setAddress(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+                  </div>
+                  
+                  {position && position.latitude && position.longitude && (
                     <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center mb-2">
                         <MapPin className="h-5 w-5 text-green-600 mr-2" />
@@ -283,7 +450,7 @@ const CreateReport = () => {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !selectedFile || !position}
+              disabled={isSubmitting || !selectedFile || !position || !position.latitude || !position.longitude}
               className="btn btn-primary inline-flex items-center"
             >
               {isSubmitting ? (

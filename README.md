@@ -1,11 +1,11 @@
-# LAPOR - Layanan Aspirasi Perbaikan dan Observasi Ruas Jalan
+# LAPOR - Road Damage Reporting System
 
-[![GitHub](https://img.shields.io/badge/GitHub-Bhimonw%2FLapor-blue?logo=github)](https://github.com/Bhimonw/Lapor.git)
-[![Node.js](https://img.shields.io/badge/Node.js-v16+-green?logo=node.js)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-18+-blue?logo=react)](https://reactjs.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Latest-green?logo=mongodb)](https://mongodb.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-16+-green.svg)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-5+-green.svg)](https://mongodb.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Sistem pelaporan kerusakan jalan berbasis web yang memungkinkan pengguna melaporkan jalan rusak dengan foto, deskripsi, dan lokasi otomatis. Aplikasi ini dirancang untuk memudahkan masyarakat dalam melaporkan kondisi jalan yang rusak kepada pihak berwenang.
+A comprehensive web application for reporting road damage with geolocation features, photo uploads, and administrative management capabilities.
 
 ## 🚀 Fitur
 

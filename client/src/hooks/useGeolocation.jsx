@@ -3,8 +3,15 @@ import toast from 'react-hot-toast';
 
 const useGeolocation = (options = {}) => {
   const [location, setLocation] = useState(null);
+  // Set default position to Jakarta, Indonesia
+  const [position, setPosition] = useState({
+    latitude: -6.2088,
+    longitude: 106.8456
+  });
+  const [address, setAddress] = useState('Jakarta, Indonesia');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [watchId, setWatchId] = useState(null);
 
   const defaultOptions = {
     enableHighAccuracy: true,
@@ -14,7 +21,7 @@ const useGeolocation = (options = {}) => {
   };
 
   // Get current position
-  const getCurrentPosition = () => {
+  const getCurrentPosition = async () => {
     if (!navigator.geolocation) {
       const errorMsg = 'Geolocation is not supported by this browser';
       setError(errorMsg);
@@ -26,41 +33,53 @@ const useGeolocation = (options = {}) => {
     setError(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
+      async (positionData) => {
+        const { latitude, longitude, accuracy } = positionData.coords;
         const locationData = {
           latitude,
           longitude,
           accuracy,
-          timestamp: position.timestamp,
+          timestamp: positionData.timestamp,
         };
 
         setLocation(locationData);
+        setPosition({ latitude, longitude });
+        
+        // Get address from coordinates
+        try {
+          const addressResult = await getAddressFromCoords(latitude, longitude);
+          setAddress(addressResult);
+        } catch (err) {
+          console.error('Failed to get address:', err);
+        }
+        
         setLoading(false);
-
-        toast.success('Location detected successfully!');
+        toast.success('Lokasi berhasil didapatkan!');
       },
       (error) => {
-        let errorMessage = 'Failed to get location';
+        let errorMessage = 'Gagal mendapatkan lokasi';
 
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied by user';
+            errorMessage = 'Akses lokasi ditolak. Silakan izinkan akses lokasi di browser Anda.';
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information is unavailable';
+            errorMessage = 'Informasi lokasi tidak tersedia. Pastikan GPS aktif.';
             break;
           case error.TIMEOUT:
-            errorMessage = 'Location request timed out';
+            errorMessage = 'Permintaan lokasi timeout. Silakan coba lagi.';
             break;
           default:
-            errorMessage = 'An unknown error occurred while retrieving location';
+            errorMessage = 'Terjadi kesalahan saat mengambil lokasi. Menggunakan lokasi default Jakarta.';
             break;
         }
 
         setError(errorMessage);
         setLoading(false);
         toast.error(errorMessage);
+        
+        // Keep default Jakarta location if geolocation fails
+        console.log('Geolocation failed, using default Jakarta location');
       },
       defaultOptions
     );
@@ -91,20 +110,20 @@ const useGeolocation = (options = {}) => {
         setLoading(false);
       },
       (error) => {
-        let errorMessage = 'Failed to watch location';
+        let errorMessage = 'Gagal memantau lokasi';
 
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied by user';
+            errorMessage = 'Akses lokasi ditolak. Silakan izinkan akses lokasi di browser Anda.';
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information is unavailable';
+            errorMessage = 'Informasi lokasi tidak tersedia. Pastikan GPS aktif.';
             break;
           case error.TIMEOUT:
-            errorMessage = 'Location request timed out';
+            errorMessage = 'Permintaan lokasi timeout. Silakan coba lagi.';
             break;
           default:
-            errorMessage = 'An unknown error occurred while watching location';
+            errorMessage = 'Terjadi kesalahan saat memantau lokasi.';
             break;
         }
 
@@ -128,6 +147,8 @@ const useGeolocation = (options = {}) => {
   // Reset state
   const reset = () => {
     setLocation(null);
+    setPosition(null);
+    setAddress(null);
     setError(null);
     setLoading(false);
   };
@@ -138,25 +159,59 @@ const useGeolocation = (options = {}) => {
   // Get address from coordinates (reverse geocoding)
   const getAddressFromCoords = async (lat, lng) => {
     try {
-      // Using a free geocoding service (you can replace with your preferred service)
-      const response = await fetch(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=id`
-      );
+      // Try multiple geocoding services for better reliability
+      const services = [
+        {
+          url: `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=id`,
+          parser: (data) => data.display_name || 'Unknown location'
+        },
+        {
+          url: `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=id`,
+          parser: (data) => data.display_name || data.locality || 'Unknown location'
+        }
+      ];
 
-      if (response.ok) {
-        const data = await response.json();
-        return data.display_name || data.locality || 'Unknown location';
+      for (const service of services) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+          
+          const response = await fetch(service.url, {
+            signal: controller.signal,
+            headers: {
+              'User-Agent': 'LAPOR App'
+            }
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            const data = await response.json();
+            const address = service.parser(data);
+            if (address && address !== 'Unknown location') {
+              return address;
+            }
+          }
+        } catch (serviceError) {
+          console.warn('Geocoding service failed:', serviceError.message);
+          continue; // Try next service
+        }
       }
 
-      return 'Address not found';
+      // Fallback to coordinates if all services fail
+      return `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     } catch (error) {
       console.error('Reverse geocoding error:', error);
-      return 'Failed to get address';
+      return `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     }
   };
 
   return {
     location,
+    position,
+    setPosition,
+    address,
+    setAddress,
     error,
     loading,
     isSupported,
