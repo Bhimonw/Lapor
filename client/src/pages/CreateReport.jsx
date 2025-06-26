@@ -318,10 +318,10 @@ const CreateReport = () => {
                   
                   {/* Manual Coordinate Input */}
                   <div className="space-y-3">
-                    <div>
+                      <div>
                       <p className="text-sm text-gray-600">Atau masukkan koordinat secara manual:</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Contoh: Latitude: -3.453639, Longitude: 114.837887
+                        
                       </p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -332,7 +332,7 @@ const CreateReport = () => {
                         <input
                           type="number"
                           step="any"
-                          placeholder="-3.453639"
+                          placeholder="Belum ada input"
                           value={position?.latitude || ''}
                           onChange={(e) => {
                             const value = e.target.value;
@@ -341,10 +341,10 @@ const CreateReport = () => {
                             } else {
                               const lat = parseFloat(value);
                               if (!isNaN(lat) && lat >= -90 && lat <= 90) {
-                                setPosition(prev => ({
-                                  ...prev,
-                                  latitude: lat
-                                }));
+                                setPosition(prev => prev ? {
+                                ...prev,
+                                latitude: lat
+                              } : { latitude: lat, longitude: null });
                               }
                             }
                           }}
@@ -371,7 +371,7 @@ const CreateReport = () => {
                         <input
                           type="number"
                           step="any"
-                          placeholder="114.837887"
+                          placeholder="Belum ada input"
                           value={position?.longitude || ''}
                           onChange={(e) => {
                             const value = e.target.value;
@@ -380,10 +380,10 @@ const CreateReport = () => {
                             } else {
                               const lng = parseFloat(value);
                               if (!isNaN(lng) && lng >= -180 && lng <= 180) {
-                                setPosition(prev => ({
-                                  ...prev,
-                                  longitude: lng
-                                }));
+                                setPosition(prev => prev ? {
+                                ...prev,
+                                longitude: lng
+                              } : { latitude: null, longitude: lng });
                               }
                             }
                           }}
@@ -412,7 +412,7 @@ const CreateReport = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder={address || "Lokasi belum ditemukan"}
+                        placeholder={address || "Belum ada input"}
                         value={address || ''}
                         onChange={(e) => setAddress(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"

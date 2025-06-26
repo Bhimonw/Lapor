@@ -51,6 +51,12 @@ function App() {
             </ProtectedRoute>
           } />
           
+          <Route path="/reports" element={
+            <ProtectedRoute>
+              <Navigate to="/reports/my" replace />
+            </ProtectedRoute>
+          } />
+          
           {/* Admin Only Routes */}
           <Route path="/admin/reports" element={
             <ProtectedRoute adminOnly>

@@ -3,12 +3,9 @@ import toast from 'react-hot-toast';
 
 const useGeolocation = (options = {}) => {
   const [location, setLocation] = useState(null);
-  // Set default position to Jakarta, Indonesia
-  const [position, setPosition] = useState({
-    latitude: -6.2088,
-    longitude: 106.8456
-  });
-  const [address, setAddress] = useState('Jakarta, Indonesia');
+  // Initialize with empty position
+  const [position, setPosition] = useState(null);
+  const [address, setAddress] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [watchId, setWatchId] = useState(null);
