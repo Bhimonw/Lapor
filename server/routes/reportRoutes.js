@@ -6,7 +6,10 @@ const {
   getUserReports,
   getReport,
   verifyReport,
-  deleteReport
+  deleteReport,
+  getReportsByStatus,
+  getReportStatusHistory,
+  getDashboardStats
 } = require('../controllers/reportController');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 const { upload, handleUploadError } = require('../middlewares/uploadMiddleware');
@@ -41,8 +44,8 @@ const createReportValidation = [
 
 const verifyReportValidation = [
   body('status')
-    .isIn(['verified', 'rejected'])
-    .withMessage('Status must be either verified or rejected'),
+    .isIn(['verified', 'rejected', 'in_progress', 'working', 'completed'])
+    .withMessage('Status must be verified, rejected, in_progress, working, or completed'),
   body('note')
     .optional()
     .trim()
@@ -105,5 +108,20 @@ router.patch(
 // @desc    Delete a report
 // @access  Private (Admin or Report Owner)
 router.delete('/:id', authMiddleware, deleteReport);
+
+// @route   GET /api/reports/status/:status
+// @desc    Get reports by status
+// @access  Private (Admin)
+router.get('/status/:status', authMiddleware, adminMiddleware, getReportsByStatus);
+
+// @route   GET /api/reports/:id/history
+// @desc    Get report status history
+// @access  Private (Admin)
+router.get('/:id/history', authMiddleware, adminMiddleware, getReportStatusHistory);
+
+// @route   GET /api/reports/dashboard/stats
+// @desc    Get dashboard statistics
+// @access  Private (Admin)
+router.get('/dashboard/stats', authMiddleware, adminMiddleware, getDashboardStats);
 
 module.exports = router;

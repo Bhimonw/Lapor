@@ -10,6 +10,7 @@ import CreateReport from './pages/CreateReport';
 import MyReports from './pages/MyReports';
 import ManageReports from './pages/ManageReports';
 import ReportDetail from './pages/ReportDetail';
+import ReportsByStatus from './pages/ReportsByStatus';
 
 function App() {
   return (
@@ -58,9 +59,21 @@ function App() {
           } />
           
           {/* Admin Only Routes */}
+          <Route path="/admin" element={
+            <ProtectedRoute adminOnly>
+              <Navigate to="/admin/reports" replace />
+            </ProtectedRoute>
+          } />
+          
           <Route path="/admin/reports" element={
             <ProtectedRoute adminOnly>
               <ManageReports />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin/reports/status/:status" element={
+            <ProtectedRoute adminOnly>
+              <ReportsByStatus />
             </ProtectedRoute>
           } />
           

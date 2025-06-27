@@ -10,7 +10,10 @@ import {
   Plus,
   TrendingUp,
   MapPin,
-  Calendar
+  Calendar,
+  Settings,
+  Wrench,
+  CheckCircle2
 } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Layout from '../components/Layout';
@@ -22,6 +25,9 @@ const Dashboard = () => {
     pending: 0,
     verified: 0,
     rejected: 0,
+    in_progress: 0,
+    working: 0,
+    completed: 0,
   });
   const [recentReports, setRecentReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,22 +49,31 @@ const Dashboard = () => {
       setRecentReports(reports);
       
       // Calculate statistics
-      const statsData = {
-        total: reports.length,
-        pending: reports.filter(r => r.status === 'pending').length,
-        verified: reports.filter(r => r.status === 'verified').length,
-        rejected: reports.filter(r => r.status === 'rejected').length,
-      };
-      
-      // If admin, fetch all reports for accurate stats
+      let statsData;
       if (isAdmin()) {
-        const allReports = await reportService.getAllReports({ limit: 1000 });
-        const allReportsData = allReports.reports || [];
-        
-        statsData.total = allReportsData.length;
-        statsData.pending = allReportsData.filter(r => r.status === 'pending').length;
-        statsData.verified = allReportsData.filter(r => r.status === 'verified').length;
-        statsData.rejected = allReportsData.filter(r => r.status === 'rejected').length;
+        // For admin, get all reports for statistics
+        const allReportsData = await reportService.getAllReports();
+        const allReports = allReportsData.reports || [];
+        statsData = {
+          total: allReports.length,
+          pending: allReports.filter(r => r.status === 'pending').length,
+          verified: allReports.filter(r => r.status === 'verified').length,
+          rejected: allReports.filter(r => r.status === 'rejected').length,
+          in_progress: allReports.filter(r => r.status === 'in_progress').length,
+          working: allReports.filter(r => r.status === 'working').length,
+          completed: allReports.filter(r => r.status === 'completed').length,
+        };
+      } else {
+        // For user, calculate from their reports only
+        statsData = {
+          total: reports.length,
+          pending: reports.filter(r => r.status === 'pending').length,
+          verified: reports.filter(r => r.status === 'verified').length,
+          rejected: reports.filter(r => r.status === 'rejected').length,
+          in_progress: reports.filter(r => r.status === 'in_progress').length,
+          working: reports.filter(r => r.status === 'working').length,
+          completed: reports.filter(r => r.status === 'completed').length,
+        };
       }
       
       setStats(statsData);
@@ -84,12 +99,18 @@ const Dashboard = () => {
       pending: 'badge badge-pending',
       verified: 'badge badge-verified',
       rejected: 'badge badge-rejected',
+      in_progress: 'badge badge-info',
+      working: 'badge badge-warning',
+      completed: 'badge badge-success',
     };
     
     const labels = {
       pending: 'Menunggu',
       verified: 'Diverifikasi',
       rejected: 'Ditolak',
+      in_progress: 'Sedang Diproses',
+      working: 'Sedang Dikerjakan',
+      completed: 'Selesai',
     };
     
     return (
@@ -136,7 +157,7 @@ const Dashboard = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
           <div className="card">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -208,6 +229,60 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+
+          <div className="card">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Settings className="h-8 w-8 text-info-600" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Sedang Diproses
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {stats.in_progress}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Wrench className="h-8 w-8 text-amber-600" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Sedang Dikerjakan
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {stats.working}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <CheckCircle2 className="h-8 w-8 text-success-600" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Selesai
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {stats.completed}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Recent Reports */}
@@ -231,10 +306,7 @@ const Dashboard = () => {
                 Belum ada laporan
               </h3>
               <p className="mt-1 text-sm text-gray-500">
-                {isAdmin() 
-                  ? 'Belum ada laporan yang masuk ke sistem.'
-                  : 'Anda belum membuat laporan apapun.'
-                }
+                {isAdmin() ? 'Belum ada laporan yang masuk.' : 'Anda belum membuat laporan apapun.'}
               </p>
               {!isAdmin() && (
                 <div className="mt-6">
@@ -277,8 +349,8 @@ const Dashboard = () => {
                         <Calendar className="h-3 w-3 mr-1" />
                         {formatDate(report.createdAt)}
                       </div>
-                      {isAdmin() && report.user && (
-                        <div>
+                      {isAdmin() && (
+                        <div className="flex items-center">
                           Oleh: {report.user.name}
                         </div>
                       )}
@@ -294,7 +366,7 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           {!isAdmin() && (
             <Link
               to="/reports/new"
@@ -329,17 +401,17 @@ const Dashboard = () => {
                   {isAdmin() ? 'Kelola Laporan' : 'Lihat Laporan Saya'}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  {isAdmin() 
-                    ? 'Verifikasi dan kelola semua laporan'
-                    : 'Lihat status dan detail laporan Anda'
-                  }
+                  {isAdmin() ? 'Kelola dan verifikasi laporan masuk' : 'Lihat status dan detail laporan Anda'}
                 </p>
               </div>
             </div>
           </Link>
 
           {isAdmin() && (
-            <div className="card">
+            <Link
+              to="/admin/reports"
+              className="card hover:shadow-lg transition-shadow cursor-pointer"
+            >
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <TrendingUp className="h-8 w-8 text-primary-600" />
@@ -349,11 +421,11 @@ const Dashboard = () => {
                     Statistik
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Tingkat verifikasi: {stats.total > 0 ? Math.round((stats.verified / stats.total) * 100) : 0}%
+                    Lihat statistik dan analisis laporan
                   </p>
                 </div>
               </div>
-            </div>
+            </Link>
           )}
         </div>
       </div>

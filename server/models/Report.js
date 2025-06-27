@@ -41,7 +41,7 @@ const ReportSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'verified', 'rejected'],
+    enum: ['pending', 'verified', 'rejected', 'in_progress', 'working', 'completed'],
     default: 'pending'
   },
   verifiedBy: {
@@ -54,7 +54,58 @@ const ReportSchema = new mongoose.Schema({
   },
   verifiedAt: {
     type: Date
-  }
+  },
+  processedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  processedNote: {
+    type: String,
+    trim: true
+  },
+  processedAt: {
+    type: Date
+  },
+  workingBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  workingNote: {
+    type: String,
+    trim: true
+  },
+  workingAt: {
+    type: Date
+  },
+  completedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  completedNote: {
+    type: String,
+    trim: true
+  },
+  completedAt: {
+    type: Date
+  },
+  statusHistory: [{
+    status: {
+      type: String,
+      enum: ['pending', 'verified', 'rejected', 'in_progress', 'working', 'completed']
+    },
+    changedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    note: {
+      type: String,
+      trim: true
+    },
+    changedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true
 });

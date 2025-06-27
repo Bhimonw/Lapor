@@ -394,10 +394,10 @@ const verifyReport = async (req, res) => {
     const { id } = req.params;
     const { status, note } = req.body;
 
-    if (!['verified', 'rejected'].includes(status)) {
+    if (!['verified', 'rejected', 'in_progress', 'working', 'completed'].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid status. Must be "verified" or "rejected"'
+        message: 'Invalid status. Must be "verified", "rejected", "in_progress", "working", or "completed"'
       });
     }
 
@@ -409,11 +409,45 @@ const verifyReport = async (req, res) => {
       });
     }
 
-    // Update report
+    // Update report based on status
     report.status = status;
-    report.verifiedBy = req.user._id;
-    report.verificationNote = note || '';
-    report.verifiedAt = new Date();
+    
+    // Add to status history
+    report.statusHistory.push({
+      status: status,
+      changedBy: req.user._id,
+      note: note || '',
+      changedAt: new Date()
+    });
+    
+    // Update specific fields based on status
+    switch(status) {
+      case 'verified':
+        report.verifiedBy = req.user._id;
+        report.verificationNote = note || '';
+        report.verifiedAt = new Date();
+        break;
+      case 'in_progress':
+        report.processedBy = req.user._id;
+        report.processedNote = note || '';
+        report.processedAt = new Date();
+        break;
+      case 'working':
+        report.workingBy = req.user._id;
+        report.workingNote = note || '';
+        report.workingAt = new Date();
+        break;
+      case 'completed':
+        report.completedBy = req.user._id;
+        report.completedNote = note || '';
+        report.completedAt = new Date();
+        break;
+      case 'rejected':
+        report.verifiedBy = req.user._id;
+        report.verificationNote = note || '';
+        report.verifiedAt = new Date();
+        break;
+    }
 
     await report.save();
     
@@ -482,11 +516,135 @@ const deleteReport = async (req, res) => {
   }
 };
 
+// Get reports by status (admin only)
+const getReportsByStatus = async (req, res) => {
+  try {
+    const { status } = req.params;
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    
+    const validStatuses = ['pending', 'verified', 'rejected', 'in_progress', 'working', 'completed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status parameter'
+      });
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    const reports = await Report.find({ status })
+      .populate('user', 'name email')
+      .populate('verifiedBy', 'name email')
+      .populate('processedBy', 'name email')
+      .populate('workingBy', 'name email')
+      .populate('completedBy', 'name email')
+      .populate('statusHistory.changedBy', 'name email')
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Report.countDocuments({ status });
+    const totalPages = Math.ceil(total / parseInt(limit));
+
+    res.json({
+      success: true,
+      data: {
+        reports,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalReports: total,
+          hasNextPage: parseInt(page) < totalPages,
+          hasPrevPage: parseInt(page) > 1
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get reports by status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching reports'
+    });
+  }
+};
+
+// Get report status history
+const getReportStatusHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const report = await Report.findById(id)
+      .populate('statusHistory.changedBy', 'name email')
+      .select('statusHistory status');
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: 'Report not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        currentStatus: report.status,
+        history: report.statusHistory
+      }
+    });
+  } catch (error) {
+    console.error('Get report status history error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching status history'
+    });
+  }
+};
+
+// Get dashboard statistics with new statuses
+const getDashboardStats = async (req, res) => {
+  try {
+    const stats = await Report.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const totalReports = await Report.countDocuments();
+    const recentReports = await Report.find()
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.json({
+      success: true,
+      data: {
+        totalReports,
+        statusBreakdown: stats,
+        recentReports
+      }
+    });
+  } catch (error) {
+    console.error('Get dashboard stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching dashboard statistics'
+    });
+  }
+};
+
 module.exports = {
   createReport,
   getAllReports,
   getUserReports,
   getReport,
   verifyReport,
-  deleteReport
+  deleteReport,
+  getReportsByStatus,
+  getReportStatusHistory,
+  getDashboardStats
 };
