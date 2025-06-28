@@ -9,7 +9,9 @@ import {
   User,
   Calendar,
   MessageSquare,
-  ArrowRight
+  ArrowRight,
+  Image,
+  ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -200,6 +202,36 @@ const ReportStatusHistory = ({ reportId, isOpen, onClose }) => {
                               <div>
                                 <p className="text-xs font-medium text-gray-500 mb-1">Catatan:</p>
                                 <p className="text-sm text-gray-700">{item.note}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Attachment */}
+                        {item.attachmentUrl && (
+                          <div className="mt-3 p-3 bg-white rounded-lg border border-gray-200">
+                            <div className="flex items-start">
+                              <Image className="h-4 w-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <p className="text-xs font-medium text-gray-500 mb-2">Lampiran Bukti:</p>
+                                <div className="relative group">
+                                  <img
+                                    src={`http://localhost:3000${item.attachmentUrl}`}
+                                    alt="Lampiran bukti"
+                                    className="w-full max-w-xs h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                                    onClick={() => window.open(`http://localhost:3000${item.attachmentUrl}`, '_blank')}
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-20 rounded-lg">
+                                    <ExternalLink className="h-6 w-6 text-white" />
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => window.open(`http://localhost:3000${item.attachmentUrl}`, '_blank')}
+                                  className="mt-2 inline-flex items-center text-xs text-blue-600 hover:text-blue-800"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  Lihat gambar penuh
+                                </button>
                               </div>
                             </div>
                           </div>

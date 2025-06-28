@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -9,11 +9,13 @@ import {
   X, 
   Clock,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  History
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ReportStatusHistory from '../components/ReportStatusHistory';
 import { useAuth } from '../hooks/useAuth.jsx';
 import reportService from '../services/reports';
 
@@ -25,6 +27,7 @@ const ReportDetail = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
 
   useEffect(() => {
     fetchReport();
@@ -349,7 +352,17 @@ const ReportDetail = () => {
 
         {/* Status History */}
         <div className="card">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Riwayat Status</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-medium text-gray-900">Riwayat Status</h2>
+            <button
+              onClick={() => setHistoryModalOpen(true)}
+              className="btn btn-secondary btn-sm inline-flex items-center"
+            >
+              <History className="h-4 w-4 mr-2" />
+              Lihat Riwayat Lengkap
+            </button>
+          </div>
+          
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
               <div className="flex-shrink-0">
@@ -379,8 +392,21 @@ const ReportDetail = () => {
                 </div>
               </div>
             )}
+            
+            <div className="text-center pt-2">
+              <p className="text-xs text-gray-500">
+                Klik "Lihat Riwayat Lengkap" untuk melihat seluruh proses termasuk lampiran bukti
+              </p>
+            </div>
           </div>
         </div>
+        
+        {/* Status History Modal */}
+        <ReportStatusHistory
+          reportId={id}
+          isOpen={historyModalOpen}
+          onClose={() => setHistoryModalOpen(false)}
+        />
       </div>
     </Layout>
   );
