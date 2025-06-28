@@ -41,6 +41,14 @@ const StatusChangeModal = ({ isOpen, onClose, report, onStatusChanged }) => {
     try {
       setLoading(true);
       
+      // Debug logging
+      console.log('=== STATUS CHANGE MODAL SUBMIT ===');
+      console.log('Report ID:', report._id);
+      console.log('Current Status:', report.status);
+      console.log('New Status:', newStatus);
+      console.log('Note:', note);
+      console.log('Attachment File:', attachmentFile);
+      
       const formData = new FormData();
       formData.append('status', newStatus);
       if (note.trim()) {
@@ -48,6 +56,12 @@ const StatusChangeModal = ({ isOpen, onClose, report, onStatusChanged }) => {
       }
       if (attachmentFile) {
         formData.append('attachment', attachmentFile);
+      }
+      
+      // Log FormData contents
+      console.log('FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
       }
 
       await reportService.verifyReportWithFile(report._id, formData);
@@ -72,8 +86,16 @@ const StatusChangeModal = ({ isOpen, onClose, report, onStatusChanged }) => {
 
   if (!isOpen || !report) return null;
 
-  const availableStatuses = ['pending', 'verified', 'rejected', 'in_progress', 'working', 'completed']
-    .filter(status => status !== report.status);
+  const nextStatusOptions = {
+    pending: ['verified', 'rejected'],
+    verified: ['in_progress'],
+    in_progress: ['working'],
+    working: ['completed'],
+    completed: [],
+    rejected: []
+  };
+
+  const availableStatuses = nextStatusOptions[report.status] || [];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

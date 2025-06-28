@@ -96,6 +96,13 @@ const createReport = async (req, res) => {
     console.log('=== CREATE REPORT REQUEST ===');
     console.log('Request body:', req.body);
     console.log('Request file:', req.file ? { name: req.file.originalname, size: req.file.size } : 'No file');
+    console.log('Location data received:', {
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
+      address: req.body.address,
+      latType: typeof req.body.latitude,
+      lngType: typeof req.body.longitude
+    });
     
     // Check for validation errors
     const errors = validationResult(req);
@@ -122,15 +129,33 @@ const createReport = async (req, res) => {
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
     
+    console.log('Parsed coordinates:', {
+      originalLat: latitude,
+      originalLng: longitude,
+      parsedLat: lat,
+      parsedLng: lng,
+      latValid: !isNaN(lat) && lat >= -90 && lat <= 90,
+      lngValid: !isNaN(lng) && lng >= -180 && lng <= 180
+    });
+    
     if (isNaN(lat) || isNaN(lng)) {
+      console.log('Coordinate validation failed - NaN values');
       return res.status(400).json({
         success: false,
         message: 'Invalid coordinates provided'
       });
     }
+    
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      console.log('Coordinate validation failed - out of range');
+      return res.status(400).json({
+        success: false,
+        message: 'Coordinates out of valid range'
+      });
+    }
 
     // Create report
-    const report = new Report({
+    const reportData = {
       user: req.user._id,
       description,
       photoUrl: `/uploads/${req.file.filename}`,
@@ -138,10 +163,28 @@ const createReport = async (req, res) => {
         type: 'Point',
         coordinates: [lng, lat] // [longitude, latitude]
       },
-      address: address || ''
+      address: address || '',
+      statusHistory: [{
+        status: 'pending',
+        changedBy: req.user._id,
+        note: 'Laporan dibuat',
+        changedAt: new Date()
+      }]
+    };
+    
+    console.log('Creating report with data:', {
+      coordinates: reportData.location.coordinates,
+      address: reportData.address,
+      description: reportData.description.substring(0, 50) + '...'
     });
-
+    
+    const report = new Report(reportData);
     await report.save();
+    
+    console.log('Report saved successfully with ID:', report._id);
+    console.log('Saved coordinates:', report.location.coordinates);
+    console.log('Virtual latitude:', report.latitude);
+    console.log('Virtual longitude:', report.longitude);
     
     // Populate user data
     await report.populate('user', 'name email');
@@ -290,6 +333,20 @@ const getAllReports = async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit));
 
+    // Debug logging for location data
+    console.log('=== GET REPORTS LOCATION DEBUG ===');
+    console.log(`Found ${reports.length} reports`);
+    reports.forEach((report, index) => {
+      if (index < 3) { // Log first 3 reports to avoid spam
+        console.log(`Report ${report._id}:`, {
+          coordinates: report.location?.coordinates,
+          latitude: report.latitude,
+          longitude: report.longitude,
+          address: report.address
+        });
+      }
+    });
+
     // Get total count for pagination
     const total = await Report.countDocuments(filter);
 
@@ -405,6 +462,14 @@ const verifyReport = async (req, res) => {
     const { status, note } = req.body;
     const attachmentFile = req.file;
 
+    // Debug logging
+    console.log('=== VERIFY REPORT REQUEST ===');
+    console.log('Report ID:', id);
+    console.log('Status received:', status);
+    console.log('Note received:', note);
+    console.log('File received:', attachmentFile ? attachmentFile.filename : 'No file');
+    console.log('Request body:', req.body);
+
     if (!['verified', 'rejected', 'in_progress', 'working', 'completed'].includes(status)) {
       return res.status(400).json({
         success: false,
@@ -417,6 +482,23 @@ const verifyReport = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Report not found'
+      });
+    }
+
+    // Validate status transition based on current status
+    const allowedTransitions = {
+      pending: ['verified', 'rejected'],
+      verified: ['in_progress'],
+      in_progress: ['working'],
+      working: ['completed'],
+      completed: [],
+      rejected: []
+    };
+
+    if (!allowedTransitions[report.status] || !allowedTransitions[report.status].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot change status from ${report.status} to ${status}. Allowed transitions: ${allowedTransitions[report.status]?.join(', ') || 'none'}`
       });
     }
 
@@ -604,11 +686,14 @@ const getReportStatusHistory = async (req, res) => {
       });
     }
 
+    // Sort status history by date (newest first)
+    const sortedHistory = report.statusHistory.sort((a, b) => new Date(b.changedAt) - new Date(a.changedAt));
+
     res.json({
       success: true,
       data: {
         currentStatus: report.status,
-        history: report.statusHistory
+        history: sortedHistory
       }
     });
   } catch (error) {

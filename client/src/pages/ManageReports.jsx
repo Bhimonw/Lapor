@@ -53,7 +53,11 @@ const ManageReports = () => {
         params.search = searchTerm.trim();
       }
       
+      console.log('=== FETCHING REPORTS ===');
+      console.log('Fetch params:', params);
       const data = await reportService.getAllReports(params);
+      console.log('Fetched reports data:', data.reports);
+      console.log('Reports with status:', data.reports?.map(r => ({ id: r._id, status: r.status })));
       setReports(data.reports || []);
       setTotalPages(data.totalPages || 1);
       setTotalReports(data.total || 0);
@@ -82,6 +86,7 @@ const ManageReports = () => {
   };
 
   const handleStatusChanged = () => {
+    console.log('=== STATUS CHANGED - REFRESHING DATA ===');
     fetchReports();
   };
 

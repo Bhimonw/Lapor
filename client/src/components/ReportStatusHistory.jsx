@@ -91,7 +91,7 @@ const ReportStatusHistory = ({ reportId, isOpen, onClose }) => {
       );
 
       if (response.data.success) {
-        setHistory(response.data.data);
+        setHistory(response.data.data.history || []);
       }
     } catch (error) {
       console.error('Error fetching status history:', error);
@@ -191,7 +191,7 @@ const ReportStatusHistory = ({ reportId, isOpen, onClose }) => {
                         {/* Date */}
                         <div className="flex items-center text-sm text-gray-500 mb-2">
                           <Calendar className="h-4 w-4 mr-1" />
-                          <span>{formatDate(item.timestamp)}</span>
+                          <span>{formatDate(item.changedAt)}</span>
                         </div>
 
                         {/* Note */}

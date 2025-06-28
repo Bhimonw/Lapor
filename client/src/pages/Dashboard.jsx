@@ -132,22 +132,22 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
               Selamat datang, {user?.name}!
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm sm:text-base text-gray-500">
               {isAdmin() ? 'Dashboard Admin' : 'Dashboard Pengguna'}
             </p>
           </div>
           {!isAdmin() && (
-            <div className="mt-4 sm:mt-0">
+            <div className="flex-shrink-0">
               <Link
                 to="/reports/new"
-                className="btn btn-primary inline-flex items-center"
+                className="btn btn-primary inline-flex items-center w-full sm:w-auto justify-center"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Buat Laporan
@@ -157,7 +157,7 @@ const Dashboard = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           <div className="card">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -165,10 +165,10 @@ const Dashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Total Laporan
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900">
                     {stats.total}
                   </dd>
                 </dl>
@@ -183,10 +183,10 @@ const Dashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Menunggu Verifikasi
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
+                    Menunggu
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900">
                     {stats.pending}
                   </dd>
                 </dl>
@@ -201,10 +201,10 @@ const Dashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Diverifikasi
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900">
                     {stats.verified}
                   </dd>
                 </dl>
@@ -219,10 +219,10 @@ const Dashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Ditolak
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900">
                     {stats.rejected}
                   </dd>
                 </dl>
@@ -237,10 +237,10 @@ const Dashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Sedang Diproses
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
+                    Diproses
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900">
                     {stats.in_progress}
                   </dd>
                 </dl>
@@ -255,10 +255,10 @@ const Dashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Sedang Dikerjakan
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
+                    Dikerjakan
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900">
                     {stats.working}
                   </dd>
                 </dl>
@@ -273,10 +273,10 @@ const Dashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Selesai
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900">
                     {stats.completed}
                   </dd>
                 </dl>
@@ -287,13 +287,13 @@ const Dashboard = () => {
 
         {/* Recent Reports */}
         <div className="card">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-medium text-gray-900">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
+            <h2 className="text-base sm:text-lg font-medium text-gray-900">
               {isAdmin() ? 'Laporan Terbaru' : 'Laporan Saya Terbaru'}
             </h2>
             <Link
               to={isAdmin() ? '/admin/reports' : '/reports/my'}
-              className="text-sm text-primary-600 hover:text-primary-500 font-medium"
+              className="text-sm text-primary-600 hover:text-primary-500 font-medium self-start sm:self-auto"
             >
               Lihat semua
             </Link>
@@ -321,43 +321,45 @@ const Dashboard = () => {
               )}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {recentReports.map((report) => (
                 <div
                   key={report._id}
-                  className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex-shrink-0">
-                    {report.photoUrl && (
-                      <img
-                        src={reportService.getImageUrl(report.photoUrl)}
-                        alt="Report"
-                        className="h-12 w-12 rounded-lg object-cover"
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {report.description}
-                    </p>
-                    <div className="flex items-center mt-1 space-x-4 text-xs text-gray-500">
-                      <div className="flex items-center">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        {report.address || `${report.latitude?.toFixed(4)}, ${report.longitude?.toFixed(4)}`}
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {formatDate(report.createdAt)}
-                      </div>
-                      {isAdmin() && (
-                        <div className="flex items-center">
-                          Oleh: {report.user.name}
-                        </div>
+                  <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 w-full">
+                    <div className="flex-shrink-0">
+                      {report.photoUrl && (
+                        <img
+                          src={reportService.getImageUrl(report.photoUrl)}
+                          alt="Report"
+                          className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg object-cover"
+                        />
                       )}
                     </div>
-                  </div>
-                  <div className="flex-shrink-0">
-                    {getStatusBadge(report.status)}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
+                        {report.description}
+                      </p>
+                      <div className="flex flex-col sm:flex-row sm:items-center mt-1 space-y-1 sm:space-y-0 sm:space-x-4 text-xs sm:text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span className="truncate">{report.address || `${report.latitude?.toFixed(4)}, ${report.longitude?.toFixed(4)}`}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+                          {formatDate(report.createdAt)}
+                        </div>
+                        {isAdmin() && (
+                          <div className="flex items-center">
+                            <span className="truncate">Oleh: {report.user.name}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      {getStatusBadge(report.status)}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -366,21 +368,21 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {!isAdmin() && (
             <Link
               to="/reports/new"
               className="card hover:shadow-lg transition-shadow cursor-pointer"
             >
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <div className="flex-shrink-0 self-center sm:self-auto">
                   <Plus className="h-8 w-8 text-primary-600" />
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <div className="text-center sm:text-left">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900">
                     Buat Laporan Baru
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 mt-1">
                     Laporkan kerusakan jalan dengan foto dan lokasi
                   </p>
                 </div>
@@ -392,15 +394,15 @@ const Dashboard = () => {
             to={isAdmin() ? '/admin/reports' : '/reports/my'}
             className="card hover:shadow-lg transition-shadow cursor-pointer"
           >
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className="flex-shrink-0 self-center sm:self-auto">
                 <FileText className="h-8 w-8 text-primary-600" />
               </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-medium text-gray-900">
+              <div className="text-center sm:text-left">
+                <h3 className="text-base sm:text-lg font-medium text-gray-900">
                   {isAdmin() ? 'Kelola Laporan' : 'Lihat Laporan Saya'}
                 </h3>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 mt-1">
                   {isAdmin() ? 'Kelola dan verifikasi laporan masuk' : 'Lihat status dan detail laporan Anda'}
                 </p>
               </div>
@@ -412,15 +414,15 @@ const Dashboard = () => {
               to="/admin/reports"
               className="card hover:shadow-lg transition-shadow cursor-pointer"
             >
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <div className="flex-shrink-0 self-center sm:self-auto">
                   <TrendingUp className="h-8 w-8 text-primary-600" />
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <div className="text-center sm:text-left">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900">
                     Statistik
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 mt-1">
                     Lihat statistik dan analisis laporan
                   </p>
                 </div>
