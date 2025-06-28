@@ -135,7 +135,7 @@ const ReportsByStatus = () => {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => navigate('/admin/dashboard')}
+            onClick={() => navigate('/admin/reports')}
             className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
           >
             <ChevronLeft className="h-5 w-5 mr-1" />

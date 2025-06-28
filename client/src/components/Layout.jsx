@@ -45,13 +45,7 @@ const Layout = ({ children }) => {
       current: location.pathname === '/reports/my',
       userOnly: true,
     },
-    {
-      name: 'Dashboard Admin',
-      href: '/admin/dashboard',
-      icon: Shield,
-      current: location.pathname === '/admin/dashboard',
-      adminOnly: true,
-    },
+
     {
       name: 'Kelola Laporan',
       href: '/admin/reports',
