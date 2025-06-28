@@ -135,6 +135,25 @@ const reportService = {
     }
   },
 
+  // Verify report with file upload (admin only)
+  verifyReportWithFile: async (id, formData) => {
+    try {
+      const response = await api.patch(`/reports/${id}/verify`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      if (response.data.success) {
+        return response.data.data.report;
+      }
+      
+      throw new Error(response.data.message || 'Failed to verify report');
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Delete report
   deleteReport: async (id) => {
     try {
@@ -160,7 +179,7 @@ const reportService = {
     }
     
     // Otherwise, construct the full URL
-    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
     return `${baseURL.replace('/api', '')}${photoUrl}`;
   },
 };

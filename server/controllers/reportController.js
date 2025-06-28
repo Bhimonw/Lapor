@@ -391,8 +391,19 @@ const getReport = async (req, res) => {
 // Verify report (admin only)
 const verifyReport = async (req, res) => {
   try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
     const { id } = req.params;
     const { status, note } = req.body;
+    const attachmentFile = req.file;
 
     if (!['verified', 'rejected', 'in_progress', 'working', 'completed'].includes(status)) {
       return res.status(400).json({
@@ -413,12 +424,19 @@ const verifyReport = async (req, res) => {
     report.status = status;
     
     // Add to status history
-    report.statusHistory.push({
+    const statusHistoryEntry = {
       status: status,
       changedBy: req.user._id,
       note: note || '',
       changedAt: new Date()
-    });
+    };
+    
+    // Add attachment if file was uploaded (optional)
+    if (attachmentFile) {
+      statusHistoryEntry.attachmentUrl = `/uploads/${attachmentFile.filename}`;
+    }
+    
+    report.statusHistory.push(statusHistoryEntry);
     
     // Update specific fields based on status
     switch(status) {

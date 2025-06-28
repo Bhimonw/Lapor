@@ -100,6 +100,8 @@ router.patch(
   '/:id/verify',
   authMiddleware,
   adminMiddleware,
+  upload.single('attachment'),
+  handleUploadError,
   verifyReportValidation,
   verifyReport
 );

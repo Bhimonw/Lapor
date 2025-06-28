@@ -80,7 +80,7 @@ const ReportStatusHistory = ({ reportId, isOpen, onClose }) => {
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:5000/api/reports/${reportId}/history`,
+        `http://localhost:3000/api/reports/${reportId}/history`,
         {
           headers: {
             Authorization: `Bearer ${token}`

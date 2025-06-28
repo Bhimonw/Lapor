@@ -101,6 +101,10 @@ const ReportSchema = new mongoose.Schema({
       type: String,
       trim: true
     },
+    attachmentUrl: {
+      type: String,
+      trim: true
+    },
     changedAt: {
       type: Date,
       default: Date.now

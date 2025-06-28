@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   FileText, 
@@ -10,22 +10,28 @@ import {
   Filter,
   Search,
   User,
-  Clock
+  Clock,
+  Trash2,
+  Edit
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
+import StatusChangeModal from '../components/StatusChangeModal';
 import reportService from '../services/reports';
 
 const ManageReports = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalReports, setTotalReports] = useState(0);
   const [actionLoading, setActionLoading] = useState(null);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
 
   useEffect(() => {
     fetchReports();
@@ -65,6 +71,21 @@ const ManageReports = () => {
     fetchReports();
   };
 
+  const handleOpenStatusModal = (report) => {
+    setSelectedReport(report);
+    setStatusModalOpen(true);
+  };
+
+  const handleCloseStatusModal = () => {
+    setStatusModalOpen(false);
+    setSelectedReport(null);
+  };
+
+  const handleStatusChanged = () => {
+    fetchReports();
+  };
+
+  // Keep legacy functions for quick verify/reject buttons
   const handleVerifyReport = async (reportId, action) => {
     const actionText = action === 'verified' ? 'memverifikasi' : 'menolak';
     
@@ -85,6 +106,24 @@ const ManageReports = () => {
     }
   };
 
+  const handleDeleteReport = async (reportId) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus laporan ini? Tindakan ini tidak dapat dibatalkan.')) {
+      return;
+    }
+    
+    try {
+      setActionLoading(reportId);
+      await reportService.deleteReport(reportId);
+      toast.success('Laporan berhasil dihapus');
+      fetchReports();
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      toast.error('Gagal menghapus laporan');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       year: 'numeric',
@@ -100,23 +139,37 @@ const ManageReports = () => {
       pending: 'badge badge-pending',
       verified: 'badge badge-verified',
       rejected: 'badge badge-rejected',
+      in_progress: 'badge badge-warning',
+      working: 'badge badge-warning',
+      completed: 'badge badge-success',
     };
     
     const labels = {
       pending: 'Menunggu',
       verified: 'Diverifikasi',
       rejected: 'Ditolak',
+      in_progress: 'Sedang Ditangani',
+      working: 'Sedang Dikerjakan',
+      completed: 'Selesai',
     };
     
     return (
-      <span className={badges[status]}>
-        {labels[status]}
+      <span className={badges[status] || 'badge badge-secondary'}>
+        {labels[status] || status}
       </span>
     );
   };
 
   const getStatusCount = (status) => {
     return reports.filter(report => report.status === status).length;
+  };
+
+  const getWorkingCount = () => {
+    return reports.filter(report => ['in_progress', 'working'].includes(report.status)).length;
+  };
+
+  const getCompletedCount = () => {
+    return reports.filter(report => report.status === 'completed').length;
   };
 
   if (loading && currentPage === 1) {
@@ -145,7 +198,7 @@ const ManageReports = () => {
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
           <div className="card">
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">{reports.length}</div>
@@ -165,11 +218,23 @@ const ManageReports = () => {
             </div>
           </div>
           <div className="card">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-danger-600">{getStatusCount('rejected')}</div>
-              <div className="text-sm text-gray-500">Ditolak</div>
-            </div>
-          </div>
+             <div className="text-center">
+               <div className="text-2xl font-bold text-red-600">{getStatusCount('rejected')}</div>
+               <div className="text-sm text-gray-500">Ditolak</div>
+             </div>
+           </div>
+           <div className="card">
+             <div className="text-center">
+               <div className="text-2xl font-bold text-blue-600">{getWorkingCount()}</div>
+               <div className="text-sm text-gray-500">Sedang Dikerjakan</div>
+             </div>
+           </div>
+           <div className="card">
+             <div className="text-center">
+               <div className="text-2xl font-bold text-purple-600">{getCompletedCount()}</div>
+               <div className="text-sm text-gray-500">Selesai</div>
+             </div>
+           </div>
         </div>
 
         {/* Filters */}
@@ -204,6 +269,9 @@ const ManageReports = () => {
                 <option value="pending">Menunggu Verifikasi</option>
                 <option value="verified">Diverifikasi</option>
                 <option value="rejected">Ditolak</option>
+                <option value="in_progress">Sedang Ditangani</option>
+                <option value="working">Sedang Dikerjakan</option>
+                <option value="completed">Selesai</option>
               </select>
             </div>
           </div>
@@ -283,6 +351,7 @@ const ManageReports = () => {
                       Detail
                     </Link>
                     
+                    {/* Quick Actions for Pending Reports */}
                     {report.status === 'pending' && (
                       <>
                         <button
@@ -312,20 +381,29 @@ const ManageReports = () => {
                       </>
                     )}
                     
-                    {report.status !== 'pending' && (
-                      <button
-                        onClick={() => handleVerifyReport(report._id, 'pending')}
-                        disabled={actionLoading === report._id}
-                        className="btn btn-warning btn-sm inline-flex items-center"
-                      >
-                        {actionLoading === report._id ? (
-                          <div className="h-3 w-3 mr-1 border border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Clock className="h-3 w-3 mr-1" />
-                        )}
-                        Reset
-                      </button>
-                    )}
+                    {/* Status Change Button */}
+                    <button
+                      onClick={() => handleOpenStatusModal(report)}
+                      disabled={actionLoading === report._id}
+                      className="btn btn-secondary btn-sm inline-flex items-center"
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Ubah Status
+                    </button>
+                    
+                    {/* Delete Button */}
+                    <button
+                      onClick={() => handleDeleteReport(report._id)}
+                      disabled={actionLoading === report._id}
+                      className="btn btn-danger btn-sm inline-flex items-center"
+                      title="Hapus Laporan"
+                    >
+                      {actionLoading === report._id ? (
+                        <div className="h-3 w-3 border border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3 w-3" />
+                      )}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -356,6 +434,16 @@ const ManageReports = () => {
               </button>
             </div>
           </div>
+        )}
+        
+        {/* Status Change Modal */}
+        {statusModalOpen && selectedReport && (
+          <StatusChangeModal
+            isOpen={statusModalOpen}
+            onClose={handleCloseStatusModal}
+            report={selectedReport}
+            onStatusChanged={handleStatusChanged}
+          />
         )}
       </div>
     </Layout>

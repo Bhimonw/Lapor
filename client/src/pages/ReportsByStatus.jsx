@@ -53,7 +53,7 @@ const ReportsByStatus = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:5000/api/reports/status/${status}?page=${currentPage}&limit=10`,
+        `http://localhost:3000/api/reports/status/${status}?page=${currentPage}&limit=10`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -80,7 +80,7 @@ const ReportsByStatus = () => {
       setUpdating(true);
       const token = localStorage.getItem('token');
       const response = await axios.patch(
-        `http://localhost:5000/api/reports/${selectedReport._id}/verify`,
+        `http://localhost:3000/api/reports/${selectedReport._id}/verify`,
         {
           status: newStatus,
           note: statusNote
@@ -193,7 +193,7 @@ const ReportsByStatus = () => {
                         <td className="px-6 py-4">
                           <div className="flex items-start">
                             <img
-                              src={`http://localhost:5000${report.photoUrl}`}
+                              src={`http://localhost:3000${report.photoUrl}`}
                               alt="Foto laporan"
                               className="h-16 w-16 object-cover rounded-lg mr-4"
                             />
