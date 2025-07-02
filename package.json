@@ -14,10 +14,19 @@
     "build:unix": "cd client && npm install && npm run build && cp -r dist/* ../server/public/",
     "postinstall": "cd server && npm install"
   },
-  "keywords": ["lapor", "jalan", "rusak", "report", "fullstack"],
+  "keywords": [
+    "lapor",
+    "jalan",
+    "rusak",
+    "report",
+    "fullstack"
+  ],
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "mongodb": "^6.17.0"
   }
 }
