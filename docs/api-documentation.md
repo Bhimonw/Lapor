@@ -266,7 +266,7 @@ Authorization: Bearer <admin-jwt-token>
 **Query Parameters**:
 - `page` (number, optional): Page number (default: 1)
 - `limit` (number, optional): Items per page (default: 10, max: 100)
-- `status` (string, optional): Filter by status (pending, verified, in_progress, resolved, rejected)
+- `status` (string, optional): Filter by status (pending, verified, rejected, in_progress, working, completed)
 - `sortBy` (string, optional): Sort field (createdAt, updatedAt, status)
 - `sortOrder` (string, optional): Sort order (asc, desc, default: desc)
 - `search` (string, optional): Search in description and address
@@ -385,7 +385,7 @@ Content-Type: application/json
 ```
 
 **Validation Rules**:
-- `status`: Required, one of (pending, verified, in_progress, resolved, rejected)
+- `status`: Required, one of (pending, verified, rejected, in_progress, working, completed)
 - `adminNotes`: Optional, max 500 characters
 
 **Response (200 OK)**:
@@ -577,7 +577,7 @@ Authorization: Bearer <admin-jwt-token>
       "pendingReports": 25,
       "verifiedReports": 45,
       "inProgressReports": 30,
-      "resolvedReports": 40,
+      "completedReports": 40,
       "rejectedReports": 10,
       "totalUsers": 95,
       "activeUsers": 88,
@@ -599,7 +599,7 @@ Authorization: Bearer <admin-jwt-token>
       { "status": "pending", "count": 25 },
       { "status": "verified", "count": 45 },
       { "status": "in_progress", "count": 30 },
-      { "status": "resolved", "count": 40 },
+      { "status": "completed", "count": 40 },
       { "status": "rejected", "count": 10 }
     ]
   }
@@ -633,7 +633,7 @@ Authorization: Bearer <admin-jwt-token>
         "pending": 25,
         "verified": 45,
         "in_progress": 30,
-        "resolved": 40,
+        "completed": 40,
         "rejected": 10
       },
       "reportsByPeriod": [

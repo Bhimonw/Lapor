@@ -101,17 +101,23 @@ const ReportDetail = () => {
       pending: 'badge badge-pending',
       verified: 'badge badge-verified',
       rejected: 'badge badge-rejected',
+      in_progress: 'badge badge-info',
+      working: 'badge badge-warning',
+      completed: 'badge badge-success',
     };
     
     const labels = {
       pending: 'Menunggu Verifikasi',
       verified: 'Diverifikasi',
       rejected: 'Ditolak',
+      in_progress: 'Sedang Diproses',
+      working: 'Sedang Dikerjakan',
+      completed: 'Selesai',
     };
     
     return (
-      <span className={badges[status]}>
-        {labels[status]}
+      <span className={badges[status] || 'badge badge-secondary'}>
+        {labels[status] || status}
       </span>
     );
   };

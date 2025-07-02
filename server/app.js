@@ -12,14 +12,21 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: [
-    process.env.CLIENT_URL || 'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:3000'
-  ],
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.CLIENT_URL, process.env.RAILWAY_STATIC_URL].filter(Boolean)
+    : [
+        process.env.CLIENT_URL || 'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:3000'
+      ],
   credentials: true,
   optionsSuccessStatus: 200
 };
+
+// In production, allow same origin
+if (process.env.NODE_ENV === 'production') {
+  corsOptions.origin = true;
+}
 
 // Middleware
 app.use(cors(corsOptions));
@@ -28,6 +35,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve static files (uploaded images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve static files from React build (production)
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'public')));
+}
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -43,14 +55,29 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportRoutes);
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
-    path: req.originalUrl
+// Catch-all handler for React SPA (production)
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) {
+      return res.status(404).json({
+        success: false,
+        message: 'Route not found',
+        path: req.originalUrl
+      });
+    }
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
-});
+} else {
+  // 404 handler for development
+  app.use('*', (req, res) => {
+    res.status(404).json({
+      success: false,
+      message: 'Route not found',
+      path: req.originalUrl
+    });
+  });
+}
 
 // Global error handler
 app.use((error, req, res, next) => {

@@ -365,7 +365,7 @@ erDiagram
   longitude: Number (required, -180 to 180),
   address: String (optional),
   photoPath: String (required),
-  status: String (enum: ['pending', 'verified', 'in_progress', 'resolved', 'rejected'], default: 'pending'),
+  status: String (enum: ['pending', 'verified', 'rejected', 'in_progress', 'working', 'completed'], default: 'pending'),
   adminNotes: String (optional),
   createdAt: Date (default: Date.now),
   updatedAt: Date (default: Date.now)

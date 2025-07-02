@@ -105,7 +105,7 @@ const options = {
             },
             status: {
               type: 'string',
-              enum: ['pending', 'in_progress', 'resolved', 'rejected'],
+              enum: ['pending', 'verified', 'rejected', 'in_progress', 'working', 'completed'],
               default: 'pending',
               description: 'Report status'
             },

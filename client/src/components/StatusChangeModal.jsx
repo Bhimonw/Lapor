@@ -87,7 +87,7 @@ const StatusChangeModal = ({ isOpen, onClose, report, onStatusChanged }) => {
   if (!isOpen || !report) return null;
 
   const nextStatusOptions = {
-    pending: ['verified', 'rejected'],
+    pending: ['verified', 'rejected', 'in_progress'],
     verified: ['in_progress'],
     in_progress: ['working'],
     working: ['completed'],

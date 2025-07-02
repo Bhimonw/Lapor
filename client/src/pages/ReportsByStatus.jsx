@@ -36,7 +36,7 @@ const ReportsByStatus = () => {
   };
 
   const nextStatusOptions = {
-    pending: ['verified', 'rejected'],
+    pending: ['verified', 'rejected', 'in_progress'],
     verified: ['in_progress'],
     in_progress: ['working'],
     working: ['completed'],

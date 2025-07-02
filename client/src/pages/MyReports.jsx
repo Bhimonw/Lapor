@@ -96,17 +96,23 @@ const MyReports = () => {
       pending: 'badge badge-pending',
       verified: 'badge badge-verified',
       rejected: 'badge badge-rejected',
+      in_progress: 'badge badge-warning',
+      working: 'badge badge-warning',
+      completed: 'badge badge-success',
     };
     
     const labels = {
-      pending: 'Menunggu',
+      pending: 'Menunggu Verifikasi',
       verified: 'Diverifikasi',
       rejected: 'Ditolak',
+      in_progress: 'Sedang Diproses',
+      working: 'Sedang Dikerjakan',
+      completed: 'Selesai',
     };
     
     return (
-      <span className={badges[status]}>
-        {labels[status]}
+      <span className={badges[status] || 'badge badge-secondary'}>
+        {labels[status] || status}
       </span>
     );
   };
@@ -206,9 +212,12 @@ const MyReports = () => {
                 className="input"
               >
                 <option value="all">Semua Status</option>
-                <option value="pending">Menunggu</option>
+                <option value="pending">Menunggu Verifikasi</option>
                 <option value="verified">Diverifikasi</option>
                 <option value="rejected">Ditolak</option>
+                <option value="in_progress">Sedang Diproses</option>
+                <option value="working">Sedang Dikerjakan</option>
+                <option value="completed">Selesai</option>
               </select>
             </div>
           </div>

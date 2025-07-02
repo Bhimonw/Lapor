@@ -63,6 +63,26 @@ Aplikasi akan berjalan di:
 - Frontend: http://localhost:5173
 - Backend: http://localhost:3000
 
+## 🚀 Deployment
+
+Aplikasi ini siap untuk di-deploy ke Railway. Lihat [DEPLOYMENT.md](DEPLOYMENT.md) untuk panduan lengkap deployment.
+
+### Quick Deploy to Railway
+
+1. Push code ke GitHub
+2. Connect repository ke Railway
+3. Set environment variables:
+   - `MONGO_URI`: MongoDB Atlas connection string
+   - `JWT_SECRET`: Strong secret key
+   - `NODE_ENV`: production
+4. Deploy otomatis akan berjalan
+
+Railway akan otomatis:
+- Build frontend React
+- Serve static files dari backend
+- Set PORT environment variable
+- Provide HTTPS domain
+
 ## 🎯 Demo Accounts
 
 Untuk kemudahan testing, tersedia akun demo yang dapat diakses langsung melalui tombol di halaman login:

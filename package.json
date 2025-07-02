@@ -2,12 +2,16 @@
   "name": "lapor",
   "version": "1.0.0",
   "description": "Layanan Aspirasi Perbaikan dan Observasi Ruas Jalan",
-  "main": "server/server.js",
+  "main": "start.js",
   "scripts": {
+    "start": "node start.js",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd server && npm run dev",
     "client": "cd client && npm run dev",
-    "install-all": "npm install && cd server && npm install && cd ../client && npm install"
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm install && npm run build && xcopy dist\\* ..\\server\\public\\ /E /Y /I",
+    "build:unix": "cd client && npm install && npm run build && cp -r dist/* ../server/public/",
+    "postinstall": "cd server && npm install"
   },
   "keywords": ["lapor", "jalan", "rusak", "report", "fullstack"],
   "author": "Your Name",
