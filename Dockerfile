@@ -4,9 +4,12 @@
 FROM node:18-alpine AS frontend-builder
 WORKDIR /app/client
 
+# Increase memory limit for Node.js
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Install dependencies (including devDependencies for build)
 COPY client/package*.json ./
-RUN npm ci
+RUN npm ci --prefer-offline --no-audit
 
 # Copy source code and build
 COPY client/ ./
@@ -16,9 +19,9 @@ RUN npm run build
 FROM node:18-alpine AS production
 WORKDIR /app
 
-# Install server dependencies only
+# Install server dependencies only (skip postinstall to avoid frontend build)
 COPY server/package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 # Copy server application files
 COPY server/ ./
