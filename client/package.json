@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "copy-dist": "node -e \"const fs=require('fs');const path=require('path');const src='dist';const dest='../server/public';if(fs.existsSync(dest)){fs.rmSync(dest,{recursive:true,force:true});}fs.mkdirSync(dest,{recursive:true});fs.cpSync(src,dest,{recursive:true});\""
   },
   "dependencies": {
     "react": "^18.2.0",

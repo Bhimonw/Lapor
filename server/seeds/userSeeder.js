@@ -5,13 +5,19 @@ const connectDB = require('../config/database');
 // Fungsi untuk membuat akun admin
 async function createAdminAccount() {
   try {
-    const adminExists = await User.findOne({ email: process.env.ADMIN_EMAIL });
+    const adminExists = await User.findOne({ 
+      $or: [
+        { email: process.env.ADMIN_EMAIL },
+        { username: 'admin' }
+      ]
+    });
     
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
       
       const admin = new User({
         name: process.env.ADMIN_NAME || 'Administrator',
+        username: 'admin',
         email: process.env.ADMIN_EMAIL,
         password: hashedPassword,
         role: 'admin',
@@ -32,13 +38,19 @@ async function createAdminAccount() {
 // Fungsi untuk membuat akun demo
 async function createDemoAccount() {
   try {
-    const demoExists = await User.findOne({ email: process.env.DEMO_EMAIL });
+    const demoExists = await User.findOne({ 
+      $or: [
+        { email: process.env.DEMO_EMAIL },
+        { username: 'user' }
+      ]
+    });
     
     if (!demoExists) {
       const hashedPassword = await bcrypt.hash(process.env.DEMO_PASSWORD, 12);
       
       const demo = new User({
         name: process.env.DEMO_NAME || 'Demo User',
+        username: 'user',
         email: process.env.DEMO_EMAIL,
         password: hashedPassword,
         role: 'user',

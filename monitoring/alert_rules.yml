@@ -1,0 +1,174 @@
+# Prometheus Alert Rules for LAPOR Application
+
+groups:
+  - name: lapor.rules
+    rules:
+      # High-level application alerts
+      - alert: LaporServerDown
+        expr: up{job="lapor-server"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: lapor-server
+        annotations:
+          summary: "LAPOR server is down"
+          description: "LAPOR server has been down for more than 1 minute."
+
+      - alert: LaporServerHighErrorRate
+        expr: rate(http_requests_total{job="lapor-server",status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: lapor-server
+        annotations:
+          summary: "High error rate on LAPOR server"
+          description: "LAPOR server error rate is {{ $value }} errors per second."
+
+      - alert: LaporServerHighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="lapor-server"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: lapor-server
+        annotations:
+          summary: "High latency on LAPOR server"
+          description: "LAPOR server 95th percentile latency is {{ $value }}s."
+
+      # Resource usage alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% for more than 5 minutes."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 85% for more than 5 minutes."
+
+      - alert: LowDiskSpace
+        expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is above 90% on {{ $labels.device }}."
+
+      # Database alerts
+      - alert: MongoDBDown
+        expr: up{job="mongodb"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: mongodb
+        annotations:
+          summary: "MongoDB is down"
+          description: "MongoDB has been down for more than 1 minute."
+
+      - alert: MongoDBHighConnections
+        expr: mongodb_connections{state="current"} / mongodb_connections{state="available"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: mongodb
+        annotations:
+          summary: "MongoDB high connection usage"
+          description: "MongoDB connection usage is above 80%."
+
+      # Redis alerts (if used)
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis has been down for more than 1 minute."
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is above 90%."
+
+      # Container alerts
+      - alert: ContainerKilled
+        expr: time() - container_last_seen > 60
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container killed"
+          description: "A container has disappeared for more than 1 minute."
+
+      - alert: ContainerHighCPUUsage
+        expr: (rate(container_cpu_usage_seconds_total[3m]) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high CPU usage"
+          description: "Container CPU usage is above 80% for more than 5 minutes."
+
+      - alert: ContainerHighMemoryUsage
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high memory usage"
+          description: "Container memory usage is above 85% for more than 5 minutes."
+
+      # Application-specific alerts
+      - alert: HighNumberOfFailedReports
+        expr: increase(lapor_failed_reports_total[1h]) > 10
+        for: 0m
+        labels:
+          severity: warning
+          service: lapor-server
+        annotations:
+          summary: "High number of failed reports"
+          description: "More than 10 reports have failed in the last hour."
+
+      - alert: HighNumberOfFailedLogins
+        expr: increase(lapor_failed_logins_total[1h]) > 50
+        for: 0m
+        labels:
+          severity: warning
+          service: lapor-server
+        annotations:
+          summary: "High number of failed login attempts"
+          description: "More than 50 login attempts have failed in the last hour. Possible brute force attack."
+
+      - alert: FileUploadErrors
+        expr: increase(lapor_file_upload_errors_total[1h]) > 5
+        for: 0m
+        labels:
+          severity: warning
+          service: lapor-server
+        annotations:
+          summary: "High number of file upload errors"
+          description: "More than 5 file uploads have failed in the last hour."
+
+      # Health check alerts
+      - alert: HealthCheckFailing
+        expr: up{job="health-checks"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Health check is failing"
+          description: "Health check for {{ $labels.instance }} has been failing for more than 2 minutes."

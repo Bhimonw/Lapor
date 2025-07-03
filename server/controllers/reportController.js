@@ -354,12 +354,10 @@ const getAllReports = async (req, res) => {
       success: true,
       data: {
         reports,
-        pagination: {
-          current: parseInt(page),
-          pages: Math.ceil(total / parseInt(limit)),
-          total,
-          limit: parseInt(limit)
-        }
+        totalPages: Math.ceil(total / parseInt(limit)),
+        total,
+        currentPage: parseInt(page),
+        limit: parseInt(limit)
       }
     });
   } catch (error) {
@@ -374,27 +372,41 @@ const getAllReports = async (req, res) => {
 // Get user's own reports
 const getUserReports = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, status, search } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const reports = await Report.find({ user: req.user._id })
+    // Build filter for user's reports
+    const filter = { user: req.user._id };
+    
+    // Add status filter if provided
+    if (status && status !== 'all') {
+      filter.status = status;
+    }
+    
+    // Add search filter if provided
+    if (search && search.trim()) {
+      filter.$or = [
+        { description: { $regex: search.trim(), $options: 'i' } },
+        { address: { $regex: search.trim(), $options: 'i' } }
+      ];
+    }
+
+    const reports = await Report.find(filter)
       .populate('verifiedBy', 'name email')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
-    const total = await Report.countDocuments({ user: req.user._id });
+    const total = await Report.countDocuments(filter);
 
     res.json({
       success: true,
       data: {
         reports,
-        pagination: {
-          current: parseInt(page),
-          pages: Math.ceil(total / parseInt(limit)),
-          total,
-          limit: parseInt(limit)
-        }
+        totalPages: Math.ceil(total / parseInt(limit)),
+        total,
+        currentPage: parseInt(page),
+        limit: parseInt(limit)
       }
     });
   } catch (error) {
